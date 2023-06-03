@@ -1,63 +1,153 @@
+from database import *
 import streamlit as st
-import pandas as pd
-import matplotlib.pyplot as plt
-from sqlalchemy import create_engine, Column, Integer, String, Float, Date
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
-
-engine = create_engine('sqlite:///trade_journal.db')
-Base = declarative_base()
-
-class Trade(Base):
-    __tablename__ = 'trades'
-    id = Column(Integer, primary_key=True)
-    user = Column(String)
-    trade_date = Column(Date)
-    symbol = Column(String)
-    entry_price = Column(Float)
-    exit_price = Column(Float)
-    quantity = Column(Integer)
-
-class Balance(Base):
-    __tablename__ = 'balance'
-    id = Column(Integer, primary_key=True)
-    user = Column(String)
-    date = Column(Date)
-    balance = Column(Float)
-
-Base.metadata.create_all(engine)
-Session = sessionmaker(bind=engine)
-session = Session()
+import os
 
 
-def save_trade(user, trade_date, symbol, entry_price, exit_price, quantity):
-    trade = Trade(user=user, trade_date=trade_date, symbol=symbol, entry_price=entry_price,
-                  exit_price=exit_price, quantity=quantity)
-    session.add(trade)
-    session.commit()
 
-user = st.text_input("User")
-trade_date = st.date_input("Trade Date")
-symbol = st.text_input("Symbol")
-entry_price = st.number_input("Entry Price")
-exit_price = st.number_input("Exit Price")
-quantity = st.number_input("Quantity")
+st.title('Trading Journal')
 
-if st.button("Save Trade"):
-    save_trade(user, trade_date, symbol, entry_price, exit_price, quantity)
-    st.write("Trade saved!")
+st.subheader('Trade Records')
 
+session = Session(bind=engine)
+username = st.text_input('', placeholder='ID', key=1)
+#query by user
+trades = session.query(Trade).filter_by(user=username).all()
 
-def display_trade_history(user):
-    trades = session.query(Trade).filter_by(user=user).all()
-    if trades:
-        df = pd.DataFrame([(t.user, t.trade_date, t.symbol, t.entry_price, t.exit_price, t.quantity) for t in trades],
-                          columns=['User', 'Trade Date', 'Symbol', 'Entry Price', 'Exit Price', 'Quantity'])
-        st.subheader("Trade History")
-        st.dataframe(df)
+def display_trades():
+    if trade.status == 'Won':
+        st.markdown("""
+            <style>
+                .trade-card {
+                    border: 1px solid #ccc;
+                    padding: 20px;
+                    border-radius: 10px;
+                    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+                    width: 300px;
+                    magin: 0 auto;
+                    
+                }
+
+                .trade-card h3 {
+                    margin: 0;
+                    font-size: 24px;
+                    font-weight: 600;
+                    color: #333;
+                    text-align: center;
+                }
+
+                .trade-card p {
+                    margin: 0;
+                    font-size: 16px;
+                    color: #111;
+                }
+
+                .trade-card p:first-child {
+                    margin-top: 10px;
+                }
+
+                .trade-card p:last-child {
+                    margin-bottom: 0;
+                }
+
+                .trade-card p:not(:first-child):not(:last-child) {
+                    margin-top: 10px;
+                }
+            </style>
+        """, unsafe_allow_html=True)
+
+        st.markdown(f"""
+            <div class="trade-card" style="background-color: #c1e6c2 ;">
+                <h3>Trade ID: {trade.id}</h3>
+                <p>Forex Pair: {trade.forex_pair}</p>
+                <p>Buy/Sell: {trade.buy_sell}</p>
+                <p>Session: {trade.session}</p>
+                <p>Risk/Reward: {trade.risk_reward}</p>
+                <p>Trade Date: {trade.trade_date}</p>
+                <p>Confirmation: {trade.confirmation}</p>
+                <p>Comments: {trade.comments}</p>
+            </div>
+            <br>
+        """, unsafe_allow_html=True)
+        if st.button('View Screenshot', key=f'{trade.id}screenshot'):
+                if trade.screenshot:
+                    st.image(os.path.join("./images", trade.screenshot))
+                else:
+                    st.markdown("No screenshot available.")
+                if st.button('Close screenshot', key=f'{trade.id}close'):
+                    pass
+    if trade.status == 'Lost':
+        st.markdown("""
+            <style>
+                .trade-card {
+                    border: 1px solid #ccc;
+                    padding: 20px;
+                    border-radius: 10px;
+                    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+                    width: 300px;
+                    magin: 0 auto;
+                    
+                }
+
+                .trade-card h3 {
+                    margin: 0;
+                    font-size: 24px;
+                    font-weight: 600;
+                    color: #333;
+                    text-align: center;
+                }
+
+                .trade-card p {
+                    margin: 0;
+                    font-size: 16px;
+                    color: #111;
+                }
+
+                .trade-card p:first-child {
+                    margin-top: 10px;
+                }
+
+                .trade-card p:last-child {
+                    margin-bottom: 0;
+                }
+
+                .trade-card p:not(:first-child):not(:last-child) {
+                    margin-top: 10px;
+                }
+                </style>
+            """, unsafe_allow_html=True)
+
+        st.markdown(f"""
+        <div class="trade-card" style="background-color: #ffc0c0 ;">
+                <h3>Trade ID: {trade.id}</h3>
+                <p>Forex Pair: {trade.forex_pair}</p>
+                <p>Buy/Sell: {trade.buy_sell}</p>
+                <p>Session: {trade.session}</p>
+                <p>Risk/Reward: {trade.risk_reward}</p>
+                <p>Trade Date: {trade.trade_date}</p>
+                <p>Confirmation: {trade.confirmation}</p>
+                <p>Comments: {trade.comments}</p>
+            </div>
+            <br>
+            """, unsafe_allow_html=True)
+        if st.button('View Screenshot', key=f'{trade.id}screenshot'):
+            if trade.screenshot:
+                st.image(os.path.join("./images", trade.screenshot))
+            else:
+                st.markdown("No screenshot available.")
+            if st.button('Close screenshot', key=f'{trade.id}close'):
+                pass
+    st.markdown("---")
+
+        
+right_column, left_column = st.columns(2)
+
+for trade in trades:
+    
+    if trade.id % 2 == 0:
+        with left_column:
+            display_trades()
     else:
-        st.write("No trades found for the user.")
-
-user = st.text_input("User for Trade History")
-if st.button("Display Trade History"):
-    display_trade_history(user)
+        with right_column:
+            display_trades()
+   
+   
