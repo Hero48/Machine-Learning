@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Web Terminal</title>
+</head>
+<body>
+    <h1>Web Terminal</h1>
+    <form id="command-form">
+        <input type="text" id="command-input">
+        <button type="submit">Submit</button>
+    </form>
+    <pre id="output"></pre>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        // Submit the command form and handle the response
+        $('#command-form').submit(function (e) {
+            e.preventDefault();
+            var command = $('#command-input').val();
+            $.ajax({
+                type: 'POST',
+                url: '/execute',
+                data: { command: command },
+                success: function (response) {
+                    $('#output').text(response);
+                }
+            });
+        });
+    </script>
+</body>
+</html>
