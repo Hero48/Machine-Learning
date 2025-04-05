@@ -83,7 +83,7 @@ smmap==5.0.0
 soupsieve==2.4.1
 SQLAlchemy==2.0.13
 stack-data==0.6.2
-streamlit==1.22.0
+streamlit==1.43.2
 streamlit-card==0.0.4
 TA-Lib==0.4.26
 tenacity==8.2.2
